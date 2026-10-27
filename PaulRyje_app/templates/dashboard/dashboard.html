@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | HANTICA Library System{% endblock %}
+
+{% block content %}
+{% url 'book_create' as add_book_url %}
+{% include 'partials/page_header.html' with eyebrow="Library overview" title="Dashboard" subtitle="A quick look at what is happening in the library today." action_label="Add Book" action_icon="bi-plus-lg" action_url=add_book_url %}
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <span class="pill">
+        <i class="bi bi-calendar3"></i>
+        {{ today|date:"l, F j, Y" }}
+    </span>
+    <span class="pill">
+        <i class="bi bi-info-circle"></i>
+        Borrowing is free &mdash; no fines or payments
+    </span>
+</div>
+
+<div class="row g-3 g-lg-4 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-collection"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.books }}</div>
+                <div class="stat-label">Total Titles</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-available">
+            <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-check2-circle"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.available }}</div>
+                <div class="stat-label">Available</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-out">
+            <span class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-box-arrow-up-right"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.checked_out }}</div>
+                <div class="stat-label">Checked Out</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-members">
+            <span class="stat-icon bg-primary-subtle text-primary-emphasis"><i class="bi bi-people"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.members }}</div>
+                <div class="stat-label">Members</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-reserved">
+            <span class="stat-icon bg-info-subtle text-info-emphasis"><i class="bi bi-bookmark-star"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.reserved }}</div>
+                <div class="stat-label">Reserved</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-overdue">
+            <span class="stat-icon bg-danger-subtle text-danger-emphasis"><i class="bi bi-clock-history"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.overdue }}</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h2><i class="bi bi-activity me-2"></i>Recent Borrowing</h2>
+                    <small>The latest borrowing activity in the library</small>
+                </div>
+                <a href="{% url 'borrowing_list' %}" class="btn btn-sm btn-light border">View all</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Member</th>
+                            <th scope="col">Book</th>
+                            <th scope="col">Borrowed</th>
+                            <th scope="col">Due</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrowing in recent_borrowings %}
+                        <tr>
+                            <td>{{ borrowing.member.full_name }}</td>
+                            <td><span class="book-title">{{ borrowing.book.title }}</span></td>
+                            <td class="book-meta">{{ borrowing.borrowed_on|date:"M d, Y" }}</td>
+                            <td class="book-meta">{{ borrowing.due_on|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge-status bg-{{ borrowing.badge_class }}-subtle text-{{ borrowing.badge_class }}-emphasis">
+                                    <i class="bi bi-circle-fill"></i>{{ borrowing.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div><i class="bi bi-arrow-left-right"></i></div>
+                                <p class="mb-2">No borrowing activity yet.</p>
+                                <a href="{% url 'borrowing_create' %}" class="btn btn-sm btn-add">
+                                    <i class="bi bi-plus-lg me-1"></i>Record a Borrowing
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-5">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h2><i class="bi bi-exclamation-triangle me-2"></i>Overdue Books</h2>
+                    <small>Items that need to be returned</small>
+                </div>
+                <span class="panel-count">{{ stats.overdue }}</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Member / Book</th>
+                            <th scope="col">Due</th>
+                            <th scope="col">Late</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrowing in overdue_borrowings %}
+                        <tr>
+                            <td>
+                                <div class="book-title">{{ borrowing.member.full_name }}</div>
+                                <div class="book-meta">{{ borrowing.book.title }}</div>
+                            </td>
+                            <td class="book-meta">{{ borrowing.due_on|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge-status bg-danger-subtle text-danger-emphasis">
+                                    <i class="bi bi-circle-fill"></i>{{ borrowing.days_overdue }}d
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-success"
+                                        data-bs-toggle="modal" data-bs-target="#returnModal"
+                                        data-action="{% url 'borrowing_return' borrowing.pk %}"
+                                        data-book="{{ borrowing.book.title }}"
+                                        data-member="{{ borrowing.member.full_name }}"
+                                        data-due="{{ borrowing.due_on|date:'M d, Y' }}">
+                                    Return
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div><i class="bi bi-check2-circle"></i></div>
+                                <p class="mb-0">Everything is on schedule. No overdue books.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+{% include 'partials/return_modal.html' %}
+{% endblock %}

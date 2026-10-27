@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings | HANTICA Library System{% endblock %}
+
+{% block content %}
+{% include 'partials/page_header.html' with eyebrow="System" title="Settings" subtitle="Manage the library profile and borrowing rules." %}
+
+<div class="form-card">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <h2 class="form-section-title">Library Profile</h2>
+
+        <div class="row">
+            <div class="col-md-8">
+                {% include 'partials/form_field.html' with field=form.library_name %}
+            </div>
+            <div class="col-md-4">
+                {% include 'partials/form_field.html' with field=form.branch %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                {% include 'partials/form_field.html' with field=form.contact_email %}
+            </div>
+            <div class="col-md-6">
+                {% include 'partials/form_field.html' with field=form.contact_phone %}
+            </div>
+        </div>
+
+        {% include 'partials/form_field.html' with field=form.address %}
+
+        <h2 class="form-section-title mt-4">Borrowing Rules</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                {% include 'partials/form_field.html' with field=form.loan_period_days %}
+            </div>
+            <div class="col-md-6">
+                {% include 'partials/form_field.html' with field=form.max_books_per_member %}
+            </div>
+        </div>
+
+        <div class="info-box mt-2">
+            <i class="bi bi-info-circle me-1"></i>
+            Borrowing is free. New borrowing rules apply to new borrowings and do not change existing records.
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4">
+            <button type="submit" class="btn btn-add px-4">
+                <i class="bi bi-check2 me-1"></i>Save Settings
+            </button>
+            <span class="book-meta">
+                Last updated: {{ library.updated_at|date:"M d, Y g:i A" }}
+            </span>
+        </div>
+    </form>
+</div>
+{% endblock %}

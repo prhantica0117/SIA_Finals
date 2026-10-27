@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Members | HANTICA Library System{% endblock %}
+
+{% block content %}
+<div data-auto-modal="{{ open_modal|default:'' }}" hidden></div>
+{% url 'member_create' as add_member_url %}
+{% include 'partials/page_header.html' with eyebrow="Library community" title="Members" subtitle="Manage the students and readers who borrow from the library." action_label="Add Member" action_icon="bi-person-plus" action_url=add_member_url action_modal_target="#memberAddModal" %}
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Members</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card is-available">
+            <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-person-check"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.active }}</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card is-out">
+            <span class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-person-dash"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.suspended }}</div>
+                <div class="stat-label">Suspended</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2><i class="bi bi-people me-2"></i>Member Directory</h2>
+            <small>Active members can borrow available books</small>
+        </div>
+        <span class="panel-count">
+            <i class="bi bi-person-lines-fill me-1"></i>{{ members|length }} record{{ members|length|pluralize }}
+        </span>
+    </div>
+
+    <div class="panel-toolbar">
+        <form class="d-flex flex-wrap align-items-center gap-2" method="get" action="{% url 'member_list' %}">
+            <div class="input-group search-box">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                <input type="search" class="form-control" name="q" value="{{ search }}"
+                       placeholder="Search name, email or phone" aria-label="Search members">
+            </div>
+            <select name="status" class="form-select filter-select" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-soft"><i class="bi bi-funnel me-1"></i>Filter</button>
+            {% if has_filters %}
+                <a href="{% url 'member_list' %}" class="btn btn-light border">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Contact</th>
+                    <th scope="col">Joined</th>
+                    <th scope="col">Active</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>
+                        <span class="book-title">{{ member.full_name }}</span>
+                        <div class="book-meta">Member #{{ member.id }}</div>
+                    </td>
+                    <td>
+                        {% if member.email %}<div>{{ member.email }}</div>{% endif %}
+                        {% if member.phone %}<div class="book-meta">{{ member.phone }}</div>{% endif %}
+                        {% if not member.email and not member.phone %}<span class="book-meta">&mdash;</span>{% endif %}
+                    </td>
+                    <td class="book-meta">{{ member.joined_on|date:"M d, Y" }}</td>
+                    <td>
+                        {% if member.active_count %}
+                            <span class="badge-soft">{{ member.active_count }} book{{ member.active_count|pluralize }}</span>
+                        {% else %}
+                            <span class="book-meta">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="book-meta">{{ member.total_count }}</td>
+                    <td>
+                        <span class="badge-status bg-{{ member.badge_class }}-subtle text-{{ member.badge_class }}-emphasis">
+                            <i class="bi bi-circle-fill"></i>{{ member.status }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="table-actions justify-content-end">
+                            <a href="{% url 'borrowing_list' %}?member={{ member.pk }}&status=all"
+                               class="btn btn-sm btn-light border" title="Borrowing history for {{ member.full_name }}">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
+                            <a href="{% url 'member_update' member.pk %}" class="btn btn-sm btn-light border"
+                               title="Edit {{ member.full_name }}"
+                               data-bs-toggle="modal" data-bs-target="#memberEditModal"
+                               data-action="{% url 'member_update' member.pk %}"
+                               data-full-name="{{ member.full_name }}"
+                               data-email="{{ member.email }}"
+                               data-phone="{{ member.phone }}"
+                               data-address="{{ member.address }}"
+                               data-joined-on="{{ member.joined_on|date:'Y-m-d' }}"
+                               data-status="{{ member.status }}">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'member_delete' member.pk %}" class="btn btn-sm btn-outline-danger"
+                               title="Delete {{ member.full_name }}"
+                               data-bs-toggle="modal" data-bs-target="#memberDeleteModal"
+                               data-action="{% url 'member_delete' member.pk %}"
+                               data-full-name="{{ member.full_name }}">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <div><i class="bi {% if has_filters %}bi-search{% else %}bi-people{% endif %}"></i></div>
+                        {% if has_filters %}
+                            <p class="mb-2">No members matched your search or filter.</p>
+                            <a href="{% url 'member_list' %}" class="btn btn-sm btn-outline-primary">Clear filters</a>
+                        {% else %}
+                            <p class="mb-2">No members yet. Add your first member to start borrowing.</p>
+                            <a href="{% url 'member_create' %}" class="btn btn-sm btn-add"
+                               data-bs-toggle="modal" data-bs-target="#memberAddModal">
+                                <i class="bi bi-person-plus me-1"></i>Add Member
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="modal fade" id="memberAddModal" tabindex="-1" aria-labelledby="memberAddModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="post" action="{% url 'member_create' %}" novalidate>
+                {% csrf_token %}
+                <div class="modal-header modal-brand">
+                    <div>
+                        <h5 class="modal-title" id="memberAddModalLabel">
+                            <i class="bi bi-person-plus me-2"></i>Add Member
+                        </h5>
+                        <small class="modal-subtitle">Register a new library member.</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if add_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ add_form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            {% include 'partials/form_field.html' with field=add_form.full_name %}
+                        </div>
+                        <div class="col-md-4">
+                            {% include 'partials/form_field.html' with field=add_form.status %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% include 'partials/form_field.html' with field=add_form.email %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include 'partials/form_field.html' with field=add_form.phone %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% include 'partials/form_field.html' with field=add_form.joined_on %}
+                        </div>
+                        <div class="col-md-8">
+                            {% include 'partials/form_field.html' with field=add_form.address %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-add px-4">
+                        <i class="bi bi-person-plus me-1"></i>Save Member
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="memberEditModal"
+     data-preserve="{% if edit_form_preserve %}1{% else %}0{% endif %}"
+     tabindex="-1" aria-labelledby="memberEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="post" id="memberEditForm" action="{{ edit_form_action }}" novalidate>
+                {% csrf_token %}
+                <div class="modal-header modal-brand">
+                    <div>
+                        <h5 class="modal-title" id="memberEditModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Edit Member
+                        </h5>
+                        <small class="modal-subtitle">
+                            Update the details for
+                            <span data-edit-name>{% if edit_member %}{{ edit_member.full_name }}{% else %}this member{% endif %}</span>.
+                        </small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if edit_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ edit_form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            {% include 'partials/form_field.html' with field=edit_form.full_name %}
+                        </div>
+                        <div class="col-md-4">
+                            {% include 'partials/form_field.html' with field=edit_form.status %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% include 'partials/form_field.html' with field=edit_form.email %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include 'partials/form_field.html' with field=edit_form.phone %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% include 'partials/form_field.html' with field=edit_form.joined_on %}
+                        </div>
+                        <div class="col-md-8">
+                            {% include 'partials/form_field.html' with field=edit_form.address %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-add px-4">
+                        <i class="bi bi-check2 me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="memberDeleteModal"
+     data-preserve="{% if delete_preserve %}1{% else %}0{% endif %}"
+     tabindex="-1" aria-labelledby="memberDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="memberDeleteForm" action="{{ delete_action }}">
+                {% csrf_token %}
+                <div class="modal-header modal-brand">
+                    <div>
+                        <h5 class="modal-title" id="memberDeleteModalLabel">
+                            <i class="bi bi-trash me-2"></i>Delete Member
+                        </h5>
+                        <small class="modal-subtitle">This action cannot be undone.</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        Are you sure you want to delete
+                        <strong data-delete-name>{% if delete_member %}{{ delete_member.full_name }}{% else %}this member{% endif %}</strong>?
+                    </p>
+                    <p class="book-meta mb-0">Members with borrowing history cannot be deleted; set their status to Inactive instead.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-trash me-1"></i>Delete Member
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

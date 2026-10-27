@@ -1,0 +1,23 @@
+<div class="page-head">
+    <div>
+        {% if eyebrow %}<span class="eyebrow">{{ eyebrow }}</span>{% endif %}
+        <h1 class="page-title">{{ title }}</h1>
+        {% if subtitle %}<p class="page-sub">{{ subtitle }}</p>{% endif %}
+    </div>
+
+    {% if action_url or action2_url %}
+    <div class="page-actions d-flex flex-wrap gap-2">
+        {% if action2_url %}
+        <a href="{{ action2_url }}" class="btn btn-light border px-3">
+            <i class="bi {{ action2_icon|default:'bi-arrow-left' }} me-1"></i>{{ action2_label }}
+        </a>
+        {% endif %}
+        {% if action_url %}
+        <a href="{{ action_url }}" class="btn btn-add px-3"
+           {% if action_modal_target %}data-bs-toggle="modal" data-bs-target="{{ action_modal_target }}"{% endif %}>
+            <i class="bi {{ action_icon|default:'bi-plus-lg' }} me-1"></i>{{ action_label }}
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>

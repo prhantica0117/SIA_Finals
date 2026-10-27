@@ -1,0 +1,31 @@
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="returnForm" action="">
+                {% csrf_token %}
+                <div class="modal-header modal-brand">
+                    <div>
+                        <h5 class="modal-title" id="returnModalLabel">
+                            <i class="bi bi-arrow-return-left me-2"></i>Confirm Return
+                        </h5>
+                        <small class="modal-subtitle">The book will be marked as available again.</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        Mark <strong data-return-book>this book</strong> as returned by
+                        <strong data-return-member>this member</strong>?
+                    </p>
+                    <p class="book-meta mb-0">Due date: <span data-return-due>&mdash;</span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check2 me-1"></i>Confirm Return
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports | HANTICA Library System{% endblock %}
+
+{% block content %}
+{% include 'partials/page_header.html' with eyebrow="Insights" title="Reports" subtitle="A simple summary of collection, membership, and borrowing activity." %}
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <span class="pill">
+        <i class="bi bi-calendar3"></i>
+        {{ today|date:"F j, Y" }}
+    </span>
+    <span class="pill">
+        <i class="bi bi-arrow-left-right"></i>
+        {{ stats.this_month }} borrowing{{ stats.this_month|pluralize }} this month
+    </span>
+</div>
+
+<div class="row g-3 g-lg-4 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-collection"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.books }}</div>
+                <div class="stat-label">Books</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-members">
+            <span class="stat-icon bg-primary-subtle text-primary-emphasis"><i class="bi bi-people"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.members }}</div>
+                <div class="stat-label">Members</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-active-borrow">
+            <span class="stat-icon bg-info-subtle text-info-emphasis"><i class="bi bi-journal-check"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.borrowings }}</div>
+                <div class="stat-label">Total Borrowings</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-out">
+            <span class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-box-arrow-up-right"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.active_borrowings }}</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-overdue">
+            <span class="stat-icon bg-danger-subtle text-danger-emphasis"><i class="bi bi-clock-history"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.overdue }}</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card is-available">
+            <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-check2-circle"></i></span>
+            <div>
+                <div class="stat-value">{{ stats.returned }}</div>
+                <div class="stat-label">Returned</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-5">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h2><i class="bi bi-pie-chart me-2"></i>Books by Status</h2>
+                    <small>Current condition of the collection</small>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-end">Books</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in status_breakdown %}
+                        <tr>
+                            <td>
+                                <span class="badge-status bg-{{ row.badge_class }}-subtle text-{{ row.badge_class }}-emphasis">
+                                    <i class="bi bi-circle-fill"></i>{{ row.label }}
+                                </span>
+                            </td>
+                            <td class="text-end fw-semibold">{{ row.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-7">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h2><i class="bi bi-star me-2"></i>Most Borrowed Titles</h2>
+                    <small>Books members borrow the most</small>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Author</th>
+                            <th scope="col" class="text-end">Borrowed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in top_books %}
+                        <tr>
+                            <td><span class="book-title">{{ book.title }}</span></td>
+                            <td class="book-meta">{{ book.author }}</td>
+                            <td class="text-end">
+                                <span class="badge-soft">{{ book.borrow_count }} time{{ book.borrow_count|pluralize }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="empty-state">
+                                <div><i class="bi bi-star"></i></div>
+                                <p class="mb-0">No borrowing data yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-7">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h2><i class="bi bi-exclamation-triangle me-2"></i>Overdue Items</h2>
+                    <small>Items that have passed their due date</small>
+                </div>
+                <span class="panel-count">{{ stats.overdue }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Member</th>
+                            <th scope="col">Book</th>
+                            <th scope="col">Due</th>
+                            <th scope="col" class="text-end">Days Late</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrowing in overdue_borrowings %}
+                        <tr>
+                            <td>{{ borrowing.member.full_name }}</td>
+                            <td><span class="book-title">{{ borrowing.book.title }}</span></td>
+                            <td class="book-meta">{{ borrowing.due_on|date:"M d, Y" }}</td>
+                            <td class="text-end">
+                                <span class="badge-status bg-danger-subtle text-danger-emphasis">
+                                    <i class="bi bi-circle-fill"></i>{{ borrowing.days_overdue }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div><i class="bi bi-check2-circle"></i></div>
+                                <p class="mb-0">No overdue books. Great job!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-5">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <h2><i class="bi bi-tags me-2"></i>Genres</h2>
+                    <small>Collection by genre</small>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Genre</th>
+                            <th scope="col" class="text-end">Books</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in genre_breakdown %}
+                        <tr>
+                            <td><span class="badge rounded-pill text-bg-light border">{{ row.genre }}</span></td>
+                            <td class="text-end fw-semibold">{{ row.total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="empty-state">
+                                <div><i class="bi bi-tags"></i></div>
+                                <p class="mb-0">No genres recorded yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2><i class="bi bi-person-lines-fill me-2"></i>Member Activity</h2>
+            <small>Members with the most borrowing activity</small>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Active</th>
+                    <th scope="col" class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in member_activity %}
+                <tr>
+                    <td>
+                        <span class="book-title">{{ member.full_name }}</span>
+                        <div class="book-meta">Member #{{ member.id }}</div>
+                    </td>
+                    <td>
+                        <span class="badge-status bg-{{ member.badge_class }}-subtle text-{{ member.badge_class }}-emphasis">
+                            <i class="bi bi-circle-fill"></i>{{ member.status }}
+                        </span>
+                    </td>
+                    <td class="text-end fw-semibold">{{ member.active_count }}</td>
+                    <td class="text-end fw-semibold">{{ member.total_count }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="empty-state">
+                        <div><i class="bi bi-people"></i></div>
+                        <p class="mb-0">No members registered yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
